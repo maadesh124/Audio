@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:a1/Player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -124,7 +125,12 @@ void updateStatus(){
 
 
   }
-
+void goToPlayer(int index)
+{
+    Navigator.of(context).push(
+  MaterialPageRoute(builder: (context) => Player(list:list ,index: index,)),
+);
+}
 
  @override
   Widget build(BuildContext context) {
@@ -139,7 +145,7 @@ void updateStatus(){
        Expanded(
   child: ListView.builder(
     itemCount: list.length,
-    itemBuilder: (context, index) => AudioOverview(audio: list[index]),
+    itemBuilder: (context, index) => AudioOverview(goTo: goToPlayer,audio: list[index],index:index),
   ),
 )
 
@@ -174,7 +180,6 @@ class Audio
     a.albumName=(a.metaData!.albumName!=null)? a.metaData!.albumName:'Unknown';
     a.duration=a.metaData!.trackDuration;
     a.albumArt= (a.metaData!.albumArt!=null)?Image.memory(a.metaData!.albumArt!):Icon(Icons.audiotrack);
-     
     return a;
 
  }
@@ -188,14 +193,25 @@ class Audio
 class AudioOverview extends StatelessWidget {
 
   final Audio audio;
+  Function goTo;
+  // List<Audio> audioList;
+   int index;
+  // BuildContext context;
+  AudioOverview({required this.index,super.key,required this.audio,required this.goTo});
 
-  AudioOverview({super.key,required this.audio});
+
+
+
+void goToPlayer( )
+{
+  goTo(index);
+}
+
 
   @override
   Widget build(BuildContext context)  {
-    st='build called';
     final sw=MediaQuery.of(context).size.width;
-    return ClipRect(child:  Container(width: sw*0.95,
+    return InkWell(onTap: goToPlayer, child:ClipRect(child:  Container(width: sw*0.95,
     height: 100,
     //color: Colors.blue,
     child: Row(mainAxisAlignment: MainAxisAlignment.start,
@@ -216,7 +232,7 @@ class AudioOverview extends StatelessWidget {
         ],),)
     
         ],
-    ),));
+    ),)));
   }
 }
 

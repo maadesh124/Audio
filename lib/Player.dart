@@ -2,29 +2,71 @@ import 'package:a1/listPage.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
+List<Audio> audioList=[];
+AudioPlayer player=AudioPlayer();
+
+
 class Player extends StatefulWidget {
-  Audio audio;
-   Player({super.key,required this.audio});
+List<Audio> list;
+int index;
+   Player({super.key,required this.list,required this.index})
+   {
+    audioList=list;
+   }
 
   @override
   State<Player> createState() => _PlayerState();
 }
 
 class _PlayerState extends State<Player> {
+
+int cindex=0;
+
+
+ConcatenatingAudioSource? playlist;
+
+  @override
+  void initState() {
+    cindex=widget.index;
+    super.initState();
+    getPlaylist().then((_)
+    {
+      player.setAudioSource(playlist!,initialIndex: cindex);
+    });
+    player.play();
+    
+
+  }
+
+Future<void> getPlaylist() async
+{
+  List<AudioSource> audioSourceList=[];
+  for(Audio audio in audioList)
+  {
+   audioSourceList.add(AudioSource.file(audio.path));
+  }
+    playlist=ConcatenatingAudioSource(children: audioSourceList);
+}
+
   @override
   Widget build(BuildContext context) {
     final sw=MediaQuery.of(context).size.width;
-    return MaterialApp(home: Scaffold(body:Container(
-      width: sw*0.95,
-    ) ),);
+    return MaterialApp(home: Scaffold(body:Align(alignment: Alignment.topCenter,   child: Container(
+      width: sw*0.95,//color: Colors.green,
+      child: Column(children: [
+        SizedBox(height: 30,),
+        Text(widget.list.length.toString()+'  '+widget.index.toString()),
+        Controls(songDuration: audioList[cindex].duration!.toDouble()),
+      ],)
+    ) ),));
   }
 }
 
 
 class Controls extends StatefulWidget {
 
-
-  Controls({super.key});
+double songDuration;
+  Controls({super.key,required this.songDuration});
 
   @override
   State<Controls> createState() => _ControlsState();
@@ -32,26 +74,25 @@ class Controls extends StatefulWidget {
 
 class _ControlsState extends State<Controls> {
 
-  AudioPlayer player=  AudioPlayer();
+
   double sliderPos=0;
   double sliderMax=0;
-  bool isPlaying=false;
+  bool isPlaying=true;
 
   @override
   void initState()
   {
+   
   super.initState();
-  String url='https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav';
-   player.setUrl(url).then((duration)
-   {
-    sliderMax=duration!.inMilliseconds+0.0;
-   });
+  sliderMax=widget.songDuration;
+   player=player;
   player.positionStream.listen((duration)
   {
     setState(() {
       sliderPos=duration.inMilliseconds+0.0;
     });
   });
+  player.play();
   }
 
   void onClickPause()
@@ -67,12 +108,12 @@ class _ControlsState extends State<Controls> {
 
   void onClickNext()
   {
-
+    player.seekToNext();
   }
 
   void onClickPrevious()
   {
-
+    player.seekToPrevious();
   }
 
   void onSliderChange(val)
@@ -87,6 +128,7 @@ class _ControlsState extends State<Controls> {
 
   @override
   Widget build(BuildContext context) {
+    
     final sw=MediaQuery.of(context).size.width;
     return Container(width:0.95*sw ,height: 400,color: Colors.red,
     child: Column( children: [Container(width: 0.7*sw,
@@ -103,13 +145,16 @@ class _ControlsState extends State<Controls> {
     ],),
     ),
     Spacer(flex: 1,),
-    Container(width: 0.9*sw,child: Slider(min: 0,
+    Container(color: Colors.green, width: 0.9*sw,child: Slider(min: 0,
     max: sliderMax,activeColor: Colors.black,
       
       onChanged:onSliderChange,value: sliderPos,),),
-      Container(width: sw*0.80,  child:Row(children: [Text(formatDuration(Duration(milliseconds: sliderPos.toInt()))),
+      Container( color: Colors.blue, width: sw*0.9,  child:Row(children: [
+        SizedBox(width: 20,),
+        Text(formatDuration(Duration(milliseconds: sliderPos.toInt()))),
       Spacer(flex: 1,),
-      Text(formatDuration(Duration(milliseconds: sliderMax.toInt())))
+      Text(formatDuration(Duration(milliseconds: sliderMax.toInt()))),
+      SizedBox(width: 20,),
       ],))
     ],),);
   }
