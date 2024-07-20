@@ -1,3 +1,4 @@
+import 'package:a1/Player.dart';
 import 'package:a1/listPage.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: Scaffold(body: ListPage(),),);
+    return MaterialApp(home: Scaffold(body: Controls(),),);
   }
 }
 
