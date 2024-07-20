@@ -9,12 +9,12 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 
 String st='not';
-int k=0;
+//int k=0;
 
 class ListPage extends StatefulWidget {
 
-  
-   ListPage({super.key,});
+   int hindex;
+   ListPage({super.key,required this.hindex});
 
   @override
   State<ListPage> createState() => _ListPageState();
@@ -50,7 +50,7 @@ Stream<Audio> getAudio(List<String> paths) async*
 
 void onPressed()
 {
-     Directory directory = Directory('/storage/emulated/0/Music');
+     Directory directory = Directory('/storage/emulated/0/Movies');
      paths=_listAudioFiles(directory);
 
   }
@@ -145,7 +145,11 @@ void goToPlayer(int index)
        Expanded(
   child: ListView.builder(
     itemCount: list.length,
-    itemBuilder: (context, index) => AudioOverview(goTo: goToPlayer,audio: list[index],index:index),
+    itemBuilder: (context, index) 
+    {
+    bool highLight=  index==widget.hindex?true:false;
+     return AudioOverview(goTo: goToPlayer,audio: list[index],index:index,highLight: highLight,);
+    },
   ),
 )
 
@@ -191,13 +195,14 @@ class Audio
 }
 
 class AudioOverview extends StatelessWidget {
-
+  bool highLight;
   final Audio audio;
   Function goTo;
   // List<Audio> audioList;
    int index;
   // BuildContext context;
-  AudioOverview({required this.index,super.key,required this.audio,required this.goTo});
+  AudioOverview({required this.index,super.key,required this.audio,
+  required this.goTo,required this.highLight});
 
 
 
@@ -213,7 +218,7 @@ void goToPlayer( )
     final sw=MediaQuery.of(context).size.width;
     return InkWell(onTap: goToPlayer, child:ClipRect(child:  Container(width: sw*0.95,
     height: 100,
-    //color: Colors.blue,
+    color:highLight? Colors.black.withOpacity(0.3):Colors.white,
     child: Row(mainAxisAlignment: MainAxisAlignment.start,
     crossAxisAlignment: CrossAxisAlignment.center,
       children: [SizedBox(width: 10,),

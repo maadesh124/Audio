@@ -4,7 +4,7 @@ import 'package:just_audio/just_audio.dart';
 
 List<Audio> audioList=[];
 AudioPlayer player=AudioPlayer();
-
+int z=0;
 
 class Player extends StatefulWidget {
 List<Audio> list;
@@ -12,6 +12,7 @@ int index;
    Player({super.key,required this.list,required this.index})
    {
     audioList=list;
+    
    }
 
   @override
@@ -35,7 +36,12 @@ ConcatenatingAudioSource? playlist;
     });
     player.play();
     
-
+    player.currentIndexStream.listen((newIndex)
+    {
+      setState(() {
+        cindex=newIndex!;
+      });
+    });
   }
 
 Future<void> getPlaylist() async
@@ -48,15 +54,48 @@ Future<void> getPlaylist() async
     playlist=ConcatenatingAudioSource(children: audioSourceList);
 }
 
+void goToList()
+{
+  Navigator.of(context).pop();
+}
+
+
   @override
   Widget build(BuildContext context) {
+    Audio audio=audioList[cindex];
     final sw=MediaQuery.of(context).size.width;
     return MaterialApp(home: Scaffold(body:Align(alignment: Alignment.topCenter,   child: Container(
       width: sw*0.95,//color: Colors.green,
-      child: Column(children: [
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+        children: [   
+        SizedBox(height: 40,),   
+        ClipRRect(borderRadius: BorderRadius.circular(20),child: 
+      Container(width: 0.95*sw,height: 0.95*sw,
+      child:Stack(children: [
+      FittedBox(
+        fit: BoxFit.contain,
+        child: audioList[cindex].albumArt,)
+        ,Positioned(bottom: 10,left:10,child: 
+        Column(children: [
+         InkWell(onTap: goToList,  child: Container(padding: EdgeInsets.all(5),   decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(10)
+          ),child: Text(audio.name!,style: TextStyle(
+            color: Colors.white,fontWeight: FontWeight.w900
+          ),),),),
+          SizedBox(height: 2.5,),
+        InkWell(onTap: goToList,  child: Container(padding: EdgeInsets.all(5), decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(10)
+          ),child: Text(audio.albumName!,style: TextStyle(
+            color: Colors.white,fontWeight: FontWeight.w900
+          ),),))
+        ],),)
+      ])),),
         SizedBox(height: 30,),
-        Text(widget.list.length.toString()+'  '+widget.index.toString()),
-        Controls(songDuration: audioList[cindex].duration!.toDouble()),
+        Text(audioList.length.toString()+'  '+cindex.toString()+' '+z.toString()+' '+
+       formatDuration( Duration(milliseconds:audioList[cindex].duration!))),
+        Controls(curIndex: cindex,),
       ],)
     ) ),));
   }
@@ -65,8 +104,8 @@ Future<void> getPlaylist() async
 
 class Controls extends StatefulWidget {
 
-double songDuration;
-  Controls({super.key,required this.songDuration});
+  int curIndex;
+  Controls({super.key,required this.curIndex});
 
   @override
   State<Controls> createState() => _ControlsState();
@@ -84,8 +123,8 @@ class _ControlsState extends State<Controls> {
   {
    
   super.initState();
-  sliderMax=widget.songDuration;
-   player=player;
+  sliderMax=audioList[widget.curIndex].duration!.toDouble();
+  
   player.positionStream.listen((duration)
   {
     setState(() {
@@ -128,11 +167,12 @@ class _ControlsState extends State<Controls> {
 
   @override
   Widget build(BuildContext context) {
-    
+    z++;
+    sliderMax=audioList[widget.curIndex].duration!.toDouble();
     final sw=MediaQuery.of(context).size.width;
-    return Container(width:0.95*sw ,height: 400,color: Colors.red,
+    return Container(width:0.95*sw ,height: 230,//color: Colors.red,
     child: Column( children: [Container(width: 0.7*sw,
-    height: 100,color: Colors.blue,
+    height: 100,//color: Colors.blue,
     child: Row(children: [
       IconButton(icon:Icon(Icons.skip_previous_rounded,size: 60,color: Colors.black,),
       onPressed: onClickPrevious,),
@@ -145,11 +185,13 @@ class _ControlsState extends State<Controls> {
     ],),
     ),
     Spacer(flex: 1,),
-    Container(color: Colors.green, width: 0.9*sw,child: Slider(min: 0,
+    Container(//color: Colors.green, 
+    width: 0.9*sw,child: Slider(min: 0,
     max: sliderMax,activeColor: Colors.black,
       
       onChanged:onSliderChange,value: sliderPos,),),
-      Container( color: Colors.blue, width: sw*0.9,  child:Row(children: [
+      Container( //color: Colors.blue, 
+      width: sw*0.9,  child:Row(children: [
         SizedBox(width: 20,),
         Text(formatDuration(Duration(milliseconds: sliderPos.toInt()))),
       Spacer(flex: 1,),
