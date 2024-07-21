@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:a1/Player.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -32,7 +33,18 @@ bool isGranted=false;
 
 Future<bool> getPermission() async
 {
-  bool isGranted= await Permission.manageExternalStorage.request().isGranted;
+  int sdkVer=32;
+  bool isGranted;
+  AndroidDeviceInfo androidDeviceInfo= await DeviceInfoPlugin().androidInfo;
+  sdkVer=androidDeviceInfo.version.sdkInt;
+
+  if(sdkVer>=29)
+  isGranted= await Permission.manageExternalStorage.request().isGranted;
+  else
+  isGranted=await Permission.storage.request().isGranted;
+
+
+
   this.isGranted=isGranted;
   return isGranted;
 }
@@ -48,10 +60,30 @@ Stream<Audio> getAudio(List<String> paths) async*
 
 }
 
-void onPressed()
+void onPressed() 
 {
-     Directory directory = Directory('/storage/emulated/0/Movies');
-     paths=_listAudioFiles(directory);
+  
+     Directory directory = Directory('/storage/emulated/0');
+    List<String> allDirs=[];
+     List<FileSystemEntity> allEntities= directory.listSync(recursive:false, followLinks: false);
+          setState(() {
+       pa=allEntities.length.toString();
+     });
+     for( FileSystemEntity entity in allEntities)
+     {
+      if(entity is Directory)
+      {
+       allDirs.addAll(_listAudioFiles(Directory(entity.path)));
+            setState(() {
+       pa='finished one';
+     });
+      }
+     }
+     
+     setState(() {
+       pa=allDirs.length.toString();
+     });
+     paths=allDirs;
 
   }
 
@@ -140,15 +172,15 @@ void goToPlayer(int index)
       child:Center(child: Column(
         children: [
           TopBanner(imagePath: 'assets/images/logo.jpeg', height: 200),
-          
-
+          Text(pa),
+InkWell(child: Container(width: 100,height: 30,color: Colors.red,),onTap: onPressed,),
        Expanded(
   child: ListView.builder(
     itemCount: list.length,
     itemBuilder: (context, index) 
     {
-    bool highLight=  index==widget.hindex?true:false;
-     return AudioOverview(goTo: goToPlayer,audio: list[index],index:index,highLight: highLight,);
+  //  bool highLight=  index==widget.hindex?true:false;
+     return AudioOverview(goTo: goToPlayer,audio: list[index],index:index);
     },
   ),
 )
@@ -194,46 +226,49 @@ class Audio
 
 }
 
-class AudioOverview extends StatelessWidget {
-  bool highLight;
+class AudioOverview extends StatefulWidget {
+  
   final Audio audio;
   Function goTo;
   // List<Audio> audioList;
    int index;
   // BuildContext context;
   AudioOverview({required this.index,super.key,required this.audio,
-  required this.goTo,required this.highLight});
+  required this.goTo});
 
+  @override
+  State<AudioOverview> createState() => _AudioOverviewState();
+}
 
-
+class _AudioOverviewState extends State<AudioOverview> {
 
 void goToPlayer( )
 {
-  goTo(index);
+  widget.goTo(widget.index);
 }
-
 
   @override
   Widget build(BuildContext context)  {
     final sw=MediaQuery.of(context).size.width;
-    return InkWell(onTap: goToPlayer, child:ClipRect(child:  Container(width: sw*0.95,
+    return InkWell(onTap: goToPlayer, child:ClipRect( child:  Container(width: sw*0.90,
     height: 100,
-    color:highLight? Colors.black.withOpacity(0.3):Colors.white,
+    decoration: BoxDecoration( color:Colors.white,borderRadius: BorderRadius.circular(10)),
+   
     child: Row(mainAxisAlignment: MainAxisAlignment.start,
     crossAxisAlignment: CrossAxisAlignment.center,
       children: [SizedBox(width: 10,),
         ClipRRect(borderRadius: BorderRadius.circular(10),child: 
       Container(width: 90,height: 90,child: FittedBox(
         fit: BoxFit.contain,
-        child: audio.albumArt,
+        child: widget.audio.albumArt,
       )),),
         SizedBox(width: 8,),
         Container(child: Column(  crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
           children: [SizedBox(height: 10,),
-          Text(audio.name!,style: TextStyle(fontSize: 18,fontWeight: FontWeight.w900)),
-          Text(audio.albumName!,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w900)),
-          Text(audio.duration!.toString(),style: TextStyle(fontSize: 14,fontWeight: FontWeight.w900))
+          Text(widget.audio.name!,style: TextStyle(fontSize: 18,fontWeight: FontWeight.w900)),
+          Text(widget.audio.albumName!,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w900)),
+          Text(formatDuration(Duration(milliseconds:widget.audio.duration!)),style: TextStyle(fontSize: 14,fontWeight: FontWeight.w900))
         ],),)
     
         ],

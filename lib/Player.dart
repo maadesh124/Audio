@@ -66,17 +66,17 @@ void goToList()
     final sw=MediaQuery.of(context).size.width;
     return MaterialApp(home: Scaffold(body:Align(alignment: Alignment.topCenter,   child: Container(
       width: sw*0.95,//color: Colors.green,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         children: [   
         SizedBox(height: 40,),   
         ClipRRect(borderRadius: BorderRadius.circular(20),child: 
       Container(width: 0.95*sw,height: 0.95*sw,
       child:Stack(children: [
       FittedBox(
-        fit: BoxFit.contain,
+        fit: BoxFit.cover,
         child: audioList[cindex].albumArt,)
         ,Positioned(bottom: 10,left:10,child: 
-        Column(children: [
+        Column( crossAxisAlignment: CrossAxisAlignment.start,  children: [
          InkWell(onTap: goToList,  child: Container(padding: EdgeInsets.all(5),   decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.7),
               borderRadius: BorderRadius.circular(10)
@@ -93,8 +93,8 @@ void goToList()
         ],),)
       ])),),
         SizedBox(height: 30,),
-        Text(audioList.length.toString()+'  '+cindex.toString()+' '+z.toString()+' '+
-       formatDuration( Duration(milliseconds:audioList[cindex].duration!))),
+       // Text(audioList.length.toString()+'  '+cindex.toString()+' '+z.toString()+' '+
+       //formatDuration( Duration(milliseconds:audioList[cindex].duration!))),
         Controls(curIndex: cindex,),
       ],)
     ) ),));
